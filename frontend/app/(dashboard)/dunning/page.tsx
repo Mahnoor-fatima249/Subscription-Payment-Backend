@@ -2,115 +2,110 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Clock, RotateCcw, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DataTable, StatusBadge } from '@/components/dashboard/data-table';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { AlertTriangle, Mail, Clock, CheckCircle } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
+import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 
-const dunningItems = [
-  { id: '1', customerName: 'David Lee', customerEmail: 'david@wayne.com', invoiceNumber: 'INV-000005', amount: 299, attemptCount: 2, maxRetries: 4, nextPaymentAttempt: '2024-02-19', lastAttemptAt: '2024-02-12', failureReason: 'Insufficient funds' },
-  { id: '2', customerName: 'Mike Johnson', customerEmail: 'mike@initech.com', invoiceNumber: 'INV-000003', amount: 29, attemptCount: 1, maxRetries: 4, nextPaymentAttempt: '2024-03-17', lastAttemptAt: '2024-03-10', failureReason: 'Card declined' },
-];
+interface DunningRecord {
+  id: string;
+  attemptNumber: number;
+  status: string;
+  nextRetryAt: string | null;
+  createdAt: string;
+  invoice: { invoiceNumber: string; total: number; amountDue: number; customer: { user: { firstName: string; lastName: string; email: string } } };
+}
 
 export default function DunningPage() {
-  const columns = [
-    {
-      key: 'customer',
-      label: 'Customer',
-      render: (item: typeof dunningItems[0]) => (
-        <div>
-          <p className="text-sm font-medium text-white">{item.customerName}</p>
-          <p className="text-xs text-slate-400">{item.customerEmail}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'invoice',
-      label: 'Invoice',
-      render: (item: typeof dunningItems[0]) => (
-        <span className="text-sm text-violet-400">{item.invoiceNumber}</span>
-      ),
-    },
-    {
-      key: 'amount',
-      label: 'Amount',
-      render: (item: typeof dunningItems[0]) => (
-        <span className="text-sm font-medium text-white">{formatCurrency(item.amount)}</span>
-      ),
-    },
-    {
-      key: 'attempts',
-      label: 'Attempts',
-      render: (item: typeof dunningItems[0]) => (
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"
-              style={{ width: `${(item.attemptCount / item.maxRetries) * 100}%` }}
-            />
-          </div>
-          <span className="text-sm text-slate-400">{item.attemptCount}/{item.maxRetries}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'failureReason',
-      label: 'Reason',
-      render: (item: typeof dunningItems[0]) => (
-        <span className="text-sm text-red-400">{item.failureReason}</span>
-      ),
-    },
-    {
-      key: 'nextPaymentAttempt',
-      label: 'Next Attempt',
-      render: (item: typeof dunningItems[0]) => (
-        <div className="flex items-center gap-2 text-sm text-slate-300">
-          <Clock className="w-4 h-4 text-slate-500" />
-          {formatDate(item.nextPaymentAttempt)}
-        </div>
-      ),
-    },
-  ];
+  const { data: dunning, loading } = useApi<DunningRecord[]>('/api/dunning');
+
+  if (loading) return <div className="text-center py-20 text-slate-400">Loading dunning records...</div>;
+
+  const stats = {
+    total: (dunning || []).length,
+    active: (dunning || []).filter(d => d.status === 'ACTIVE').length,
+    recovered: (dunning || []).filter(d => d.status === 'RECOVERED').length,
+    totalAtRisk: (dunning || []).filter(d => d.status === 'ACTIVE').reduce((sum, d) => sum + Number(d.invoice.amountDue), 0),
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Dunning</h1>
-          <p className="text-slate-400 mt-1">Manage failed payment retries</p>
-        </div>
-        <Button>
-          <RotateCcw className="w-4 h-4" />
-          Process All
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold text-white">Dunning Management</h1>
+        <p className="text-slate-400 mt-1">Failed payment recovery tracking</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Failed Payments', value: '2', icon: <AlertTriangle className="w-5 h-5 text-amber-400" />, color: 'text-amber-400' },
-          { label: 'Amount at Risk', value: '$328', icon: <DollarSign className="w-5 h-5 text-red-400" />, color: 'text-red-400' },
-          { label: 'Recovery Rate', value: '68%', icon: <TrendingUp className="w-5 h-5 text-emerald-400" />, color: 'text-emerald-400' },
-          { label: 'Recovered This Month', value: '$2,450', icon: <TrendingDown className="w-5 h-5 text-sky-400" />, color: 'text-sky-400' },
+          { label: 'Active Cases', value: stats.active, color: 'text-amber-400', icon: <AlertTriangle className="w-5 h-5" /> },
+          { label: 'Recovered', value: stats.recovered, color: 'text-emerald-400', icon: <CheckCircle className="w-5 h-5" /> },
+          { label: 'Total Cases', value: stats.total, color: 'text-violet-400', icon: <Clock className="w-5 h-5" /> },
+          { label: 'At Risk Revenue', value: formatCurrency(stats.totalAtRisk), color: 'text-red-400', icon: <Mail className="w-5 h-5" /> },
         ].map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="rounded-xl border border-slate-800/50 bg-slate-900/50 p-4"
-          >
+          <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
+            className="rounded-xl border border-slate-800/50 bg-slate-900/50 p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">{stat.label}</p>
-              {stat.icon}
+              <div>
+                <p className="text-sm text-slate-400">{stat.label}</p>
+                <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+              </div>
+              <div className={`p-3 rounded-xl ${stat.color} bg-current/10`}>{stat.icon}</div>
             </div>
-            <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
           </motion.div>
         ))}
       </div>
 
-      <DataTable data={dunningItems} columns={columns} />
+      <div className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-800/50">
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Customer</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Invoice</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Amount Due</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Attempt</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Status</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Next Retry</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(dunning || []).map((record, index) => (
+                <motion.tr key={record.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }}
+                  className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                  <td className="p-4">
+                    <p className="text-sm font-medium text-white">{record.invoice.customer.user.firstName} {record.invoice.customer.user.lastName}</p>
+                    <p className="text-xs text-slate-400">{record.invoice.customer.user.email}</p>
+                  </td>
+                  <td className="p-4">
+                    <span className="text-sm text-violet-400 font-mono">{record.invoice.invoiceNumber}</span>
+                  </td>
+                  <td className="p-4 text-sm font-medium text-white">{formatCurrency(record.invoice.amountDue)}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-1">
+                        {Array.from({ length: record.attemptNumber }, (_, i) => (
+                          <div key={i} className="w-2 h-2 rounded-full bg-amber-500" />
+                        ))}
+                      </div>
+                      <span className="text-sm text-slate-400">{record.attemptNumber}</span>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${getStatusColor(record.status)}`}>
+                      {record.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm text-slate-400">
+                    {record.nextRetryAt ? formatDate(record.nextRetryAt) : '—'}
+                  </td>
+                </motion.tr>
+              ))}
+              {(dunning || []).length === 0 && (
+                <tr><td colSpan={6} className="p-12 text-center text-slate-500">No dunning cases - all payments are healthy!</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

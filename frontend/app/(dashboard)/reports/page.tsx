@@ -2,136 +2,141 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, DollarSign, Repeat, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { Chart, PieChartComponent } from '@/components/dashboard/chart';
-import { StatCard } from '@/components/dashboard/stat-card';
+import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
 import { formatCurrency } from '@/lib/utils';
+import { Bar, Line, Pie } from 'recharts';
 
-const revenueByMonth = [
-  { month: 'Jan', revenue: 45000, subscriptions: 1200 },
-  { month: 'Feb', revenue: 52000, subscriptions: 1350 },
-  { month: 'Mar', revenue: 61000, subscriptions: 1500 },
-  { month: 'Apr', revenue: 58000, subscriptions: 1420 },
-  { month: 'May', revenue: 72000, subscriptions: 1680 },
-  { month: 'Jun', revenue: 81000, subscriptions: 1850 },
-];
-
-const revenueByPlan = [
-  { name: 'Enterprise', value: 102258 },
-  { name: 'Pro', value: 56133 },
-  { name: 'Starter', value: 6786 },
-  { name: 'Free', value: 0 },
-];
-
-const churnData = [
-  { month: 'Jan', churned: 25, new: 45 },
-  { month: 'Feb', churned: 18, new: 52 },
-  { month: 'Mar', churned: 32, new: 61 },
-  { month: 'Apr', churned: 22, new: 58 },
-  { month: 'May', churned: 28, new: 72 },
-  { month: 'Jun', churned: 20, new: 81 },
-];
+interface ReportData {
+  overview: { mrr: number; arr: number; activeSubscriptions: number; totalCustomers: number; mrrGrowth: number; churnRate: number };
+  revenue: Array<{ month: string; mrr: number; newRevenue: number; churnedRevenue: number }>;
+  planDistribution: Array<{ planName: string; count: number; revenue: number }>;
+  churn: { churnRate: number; churnedCount: number; totalStart: number };
+}
 
 export default function ReportsPage() {
+  const { data: report, loading, refetch } = useApi<ReportData>('/api/reports');
+
+  if (loading) return <div className="text-center py-20 text-slate-400">Loading reports...</div>;
+
+  const overview = report?.overview;
+  const revenue = report?.revenue || [];
+  const planDistribution = report?.planDistribution || [];
+
+  const COLORS = ['#8b5cf6', '#6366f1', '#3b82f6', '#22d3ee', '#10b981'];
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Reports & Analytics</h1>
-        <p className="text-slate-400 mt-1">Track your business metrics</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Reports & Analytics</h1>
+          <p className="text-slate-400 mt-1">Business intelligence dashboard</p>
+        </div>
+        <button onClick={() => refetch()} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-700/50 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </button>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Annual Recurring Revenue"
-          value="$114K"
-          change={18}
-          icon={<DollarSign className="w-6 h-6" />}
-          color="violet"
-        />
-        <StatCard
-          title="Monthly Recurring Revenue"
-          value="$9,500"
-          change={12}
-          icon={<TrendingUp className="w-6 h-6" />}
-          color="emerald"
-        />
-        <StatCard
-          title="Customer Lifetime Value"
-          value="$2,450"
-          change={8}
-          icon={<Users className="w-6 h-6" />}
-          color="sky"
-        />
-        <StatCard
-          title="Churn Rate"
-          value="2.4%"
-          change={-0.5}
-          icon={<Repeat className="w-6 h-6" />}
-          color="amber"
-        />
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Chart
-          data={revenueByMonth}
-          xKey="month"
-          yKey="revenue"
-          title="Revenue Growth"
-          type="area"
-        />
-        <Chart
-          data={churnData}
-          xKey="month"
-          yKey="new"
-          title="New vs Churned Customers"
-          type="bar"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <PieChartComponent
-          data={revenueByPlan}
-          title="Revenue by Plan"
-        />
-        
-        {/* Top Metrics */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="lg:col-span-2 rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6"
-        >
-          <h3 className="text-lg font-semibold text-white mb-6">Key Metrics</h3>
-          <div className="grid grid-cols-2 gap-6">
-            {[
-              { label: 'Average Revenue Per User', value: formatCurrency(7.6), change: 5 },
-              { label: 'Net Revenue Retention', value: '112%', change: 3 },
-              { label: 'Customer Acquisition Cost', value: formatCurrency(125), change: -8 },
-              { label: 'Payback Period', value: '3.2 months', change: -12 },
-              { label: 'Active Subscriptions', value: '1,568', change: 15 },
-              { label: 'Trial Conversion Rate', value: '24%', change: 2 },
-            ].map((metric, index) => (
-              <motion.div
-                key={metric.label}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30"
-              >
-                <p className="text-sm text-slate-400">{metric.label}</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-xl font-bold text-white">{metric.value}</p>
-                  <span className={`text-xs font-medium ${metric.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {metric.change >= 0 ? '+' : ''}{metric.change}%
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: 'MRR', value: formatCurrency(overview?.mrr || 0), icon: <DollarSign className="w-5 h-5" />, color: 'text-emerald-400', change: `+${overview?.mrrGrowth || 0}%` },
+          { label: 'ARR', value: formatCurrency(overview?.arr || 0), icon: <TrendingUp className="w-5 h-5" />, color: 'text-violet-400' },
+          { label: 'Active Subs', value: overview?.activeSubscriptions || 0, icon: <Users className="w-5 h-5" />, color: 'text-sky-400' },
+          { label: 'Churn Rate', value: `${overview?.churnRate || 0}%`, icon: <BarChart3 className="w-5 h-5" />, color: 'text-amber-400' },
+        ].map((stat, index) => (
+          <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
+            className="rounded-xl border border-slate-800/50 bg-slate-900/50 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">{stat.label}</p>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                {stat.change && (
+                  <span className="inline-flex items-center gap-1 text-xs text-emerald-400 mt-1">
+                    <ArrowUpRight className="w-3 h-3" /> {stat.change}
                   </span>
+                )}
+              </div>
+              <div className={`p-3 rounded-xl bg-current/10 ${stat.color}`}>{stat.icon}</div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+          className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Revenue Trend</h3>
+          <div className="h-64">
+            {revenue.length > 0 ? (
+              <div className="h-full flex items-end gap-1">
+                {revenue.map((r, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <div className="w-full rounded-t bg-gradient-to-t from-violet-600 to-indigo-600 transition-all hover:from-violet-500 hover:to-indigo-500"
+                      style={{ height: `${Math.max((r.mrr / Math.max(...revenue.map(x => x.mrr), 1)) * 200, 4)}px` }} />
+                    <span className="text-[10px] text-slate-500">{r.month.slice(-2)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-500">No data yet</div>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Plan Distribution</h3>
+          <div className="space-y-4">
+            {planDistribution.length > 0 ? planDistribution.map((plan, index) => {
+              const total = planDistribution.reduce((sum, p) => sum + p.count, 0);
+              const percentage = total > 0 ? (plan.count / total) * 100 : 0;
+              return (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-300">{plan.planName}</span>
+                    <span className="text-white">{plan.count} ({percentage.toFixed(1)}%)</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-800">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${percentage}%`, backgroundColor: COLORS[index % COLORS.length] }} />
+                  </div>
                 </div>
-              </motion.div>
-            ))}
+              );
+            }) : (
+              <div className="text-center text-slate-500 py-8">No plan data yet</div>
+            )}
           </div>
         </motion.div>
       </div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+        className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Revenue History</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-800/50">
+                <th className="h-10 px-4 text-left text-xs font-medium text-slate-400">Month</th>
+                <th className="h-10 px-4 text-right text-xs font-medium text-slate-400">MRR</th>
+                <th className="h-10 px-4 text-right text-xs font-medium text-slate-400">New Revenue</th>
+                <th className="h-10 px-4 text-right text-xs font-medium text-slate-400">Churned</th>
+              </tr>
+            </thead>
+            <tbody>
+              {revenue.map((r, index) => (
+                <tr key={index} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                  <td className="p-4 text-sm font-medium text-white">{r.month}</td>
+                  <td className="p-4 text-sm text-right text-white">{formatCurrency(r.mrr)}</td>
+                  <td className="p-4 text-sm text-right text-emerald-400">+{formatCurrency(r.newRevenue)}</td>
+                  <td className="p-4 text-sm text-right text-red-400">-{formatCurrency(r.churnedRevenue)}</td>
+                </tr>
+              ))}
+              {revenue.length === 0 && (
+                <tr><td colSpan={4} className="p-8 text-center text-slate-500">No revenue data yet. Data will appear as subscriptions are created.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
     </div>
   );
 }

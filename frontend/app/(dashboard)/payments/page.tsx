@@ -2,102 +2,58 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, CreditCard, ArrowUpRight, ArrowDownRight, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { DataTable, StatusBadge } from '@/components/dashboard/data-table';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { Search, Filter, DollarSign, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
+import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 
-const payments = [
-  { id: '1', customerName: 'John Doe', amount: 495, currency: 'usd', status: 'SUCCEEDED', paymentMethod: 'Visa •••• 4242', createdAt: '2024-02-14', invoiceNumber: 'INV-000001' },
-  { id: '2', customerName: 'Sarah Wilson', amount: 2990, currency: 'usd', status: 'PENDING', paymentMethod: 'Mastercard •••• 8888', createdAt: '2024-03-20', invoiceNumber: 'INV-000002' },
-  { id: '3', customerName: 'Mike Johnson', amount: 29, currency: 'usd', status: 'SUCCEEDED', paymentMethod: 'Visa •••• 1234', createdAt: '2024-03-09', invoiceNumber: 'INV-000003' },
-  { id: '4', customerName: 'David Lee', amount: 299, currency: 'usd', status: 'FAILED', paymentMethod: 'Visa •••• 5678', createdAt: '2024-02-12', invoiceNumber: 'INV-000005' },
-  { id: '5', customerName: 'Emily Brown', amount: 150, currency: 'usd', status: 'REFUNDED', paymentMethod: 'Visa •••• 4242', createdAt: '2024-03-01', invoiceNumber: 'INV-000004' },
-];
+interface Payment {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  stripePaymentId: string | null;
+  createdAt: string;
+  subscription: { customer: { user: { firstName: string; lastName: string; email: string } }; plan: { name: string } };
+}
 
 export default function PaymentsPage() {
-  const columns = [
-    {
-      key: 'customer',
-      label: 'Customer',
-      render: (item: typeof payments[0]) => (
-        <p className="text-sm font-medium text-white">{item.customerName}</p>
-      ),
-    },
-    {
-      key: 'amount',
-      label: 'Amount',
-      render: (item: typeof payments[0]) => (
-        <span className="text-sm font-medium text-white">{formatCurrency(item.amount)}</span>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (item: typeof payments[0]) => (
-        <StatusBadge status={item.status} />
-      ),
-    },
-    {
-      key: 'paymentMethod',
-      label: 'Payment Method',
-      render: (item: typeof payments[0]) => (
-        <div className="flex items-center gap-2 text-sm text-slate-300">
-          <CreditCard className="w-4 h-4 text-slate-500" />
-          {item.paymentMethod}
-        </div>
-      ),
-    },
-    {
-      key: 'invoice',
-      label: 'Invoice',
-      render: (item: typeof payments[0]) => (
-        <span className="text-sm text-violet-400">{item.invoiceNumber}</span>
-      ),
-    },
-    {
-      key: 'createdAt',
-      label: 'Date',
-      render: (item: typeof payments[0]) => (
-        <span className="text-sm text-slate-400">{formatDate(item.createdAt)}</span>
-      ),
-    },
-  ];
+  const { data: payments, loading } = useApi<Payment[]>('/api/payments');
+  const [statusFilter, setStatusFilter] = React.useState('');
+
+  const filtered = (payments || []).filter(p => !statusFilter || p.status === statusFilter);
+
+  if (loading) return <div className="text-center py-20 text-slate-400">Loading payments...</div>;
+
+  const stats = {
+    total: (payments || []).reduce((sum, p) => sum + Number(p.amount), 0),
+    succeeded: (payments || []).filter(p => p.status === 'SUCCEEDED').reduce((sum, p) => sum + Number(p.amount), 0),
+    failed: (payments || []).filter(p => p.status === 'FAILED').length,
+    count: (payments || []).length,
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Payments</h1>
-          <p className="text-slate-400 mt-1">Track all payment transactions</p>
-        </div>
-        <Button variant="outline">
-          <RotateCcw className="w-4 h-4" />
-          Export
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold text-white">Payments</h1>
+        <p className="text-slate-400 mt-1">Track all payment transactions</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Payments', value: '$42,100', icon: <ArrowUpRight className="w-5 h-5 text-emerald-400" /> },
-          { label: 'Successful', value: '$38,500', icon: <ArrowUpRight className="w-5 h-5 text-emerald-400" /> },
-          { label: 'Failed', value: '$2,600', icon: <ArrowDownRight className="w-5 h-5 text-red-400" /> },
-          { label: 'Refunded', value: '$1,000', icon: <RotateCcw className="w-5 h-5 text-amber-400" /> },
+          { label: 'Total Volume', value: formatCurrency(stats.total), icon: <DollarSign className="w-5 h-5" /> },
+          { label: 'Succeeded', value: formatCurrency(stats.succeeded), icon: <TrendingUp className="w-5 h-5" /> },
+          { label: 'Failed', value: stats.failed.toString(), icon: <AlertTriangle className="w-5 h-5" /> },
+          { label: 'Total Payments', value: stats.count.toString(), icon: <DollarSign className="w-5 h-5" /> },
         ].map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="rounded-xl border border-slate-800/50 bg-slate-900/50 p-4"
-          >
+          <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
+            className="rounded-xl border border-slate-800/50 bg-slate-900/50 p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-400">{stat.label}</p>
-              {stat.icon}
+              <div>
+                <p className="text-sm text-slate-400">{stat.label}</p>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+              </div>
+              <div className="p-3 rounded-xl bg-violet-500/10 text-violet-400">{stat.icon}</div>
             </div>
-            <p className="text-2xl font-bold text-white mt-1">{stat.value}</p>
           </motion.div>
         ))}
       </div>
@@ -105,22 +61,63 @@ export default function PaymentsPage() {
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search payments..."
-            className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all"
-          />
+          <input type="text" placeholder="Search payments..." className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" />
         </div>
-        <select className="h-10 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50">
-          <option>All Status</option>
-          <option>Succeeded</option>
-          <option>Pending</option>
-          <option>Failed</option>
-          <option>Refunded</option>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+          className="h-10 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+          <option value="">All Status</option>
+          <option value="SUCCEEDED">Succeeded</option>
+          <option value="FAILED">Failed</option>
+          <option value="PENDING">Pending</option>
+          <option value="REFUNDED">Refunded</option>
         </select>
       </div>
 
-      <DataTable data={payments} columns={columns} />
+      <div className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-800/50">
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Customer</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Plan</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Amount</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Status</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Stripe ID</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((payment, index) => (
+                <motion.tr key={payment.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }}
+                  className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                  <td className="p-4">
+                    <p className="text-sm font-medium text-white">{payment.subscription.customer.user.firstName} {payment.subscription.customer.user.lastName}</p>
+                    <p className="text-xs text-slate-400">{payment.subscription.customer.user.email}</p>
+                  </td>
+                  <td className="p-4">
+                    <span className="inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-400 px-3 py-1 text-xs font-medium">
+                      {payment.subscription.plan.name}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm font-medium text-white">{formatCurrency(payment.amount)}</td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${getStatusColor(payment.status)}`}>
+                      {payment.status}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <span className="text-xs text-slate-500 font-mono">{payment.stripePaymentId ? payment.stripePaymentId.slice(0, 20) + '...' : '—'}</span>
+                  </td>
+                  <td className="p-4 text-sm text-slate-400">{formatDate(payment.createdAt)}</td>
+                </motion.tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr><td colSpan={6} className="p-12 text-center text-slate-500">No payments found</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
