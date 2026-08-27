@@ -1,21 +1,51 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Zap, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [formData, setFormData] = React.useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 1500);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || 'Registration failed');
+        return;
+      }
+
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
+      router.push('/dashboard');
+    } catch {
+      setError('Something went wrong');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,6 +76,12 @@ export default function RegisterPage() {
             <p className="text-slate-400 mt-2">Start your billing journey</p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -55,6 +91,8 @@ export default function RegisterPage() {
                   <input
                     type="text"
                     placeholder="John"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
                     required
                   />
@@ -65,6 +103,8 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   placeholder="Doe"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   className="w-full h-12 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
                   required
                 />
@@ -78,6 +118,8 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   placeholder="name@company.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full h-12 pl-11 pr-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
                   required
                 />
@@ -91,8 +133,11 @@ export default function RegisterPage() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Create a strong password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full h-12 pl-11 pr-12 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
                   required
+                  minLength={8}
                 />
                 <button
                   type="button"
@@ -103,16 +148,6 @@ export default function RegisterPage() {
                 </button>
               </div>
             </div>
-
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 mt-0.5 rounded border-slate-700 bg-slate-800 text-violet-500 focus:ring-violet-500/50" required />
-              <span className="text-sm text-slate-400">
-                I agree to the{' '}
-                <Link href="/terms" className="text-violet-400 hover:text-violet-300">Terms</Link>
-                {' '}and{' '}
-                <Link href="/privacy" className="text-violet-400 hover:text-violet-300">Privacy Policy</Link>
-              </span>
-            </label>
 
             <Button
               type="submit"
