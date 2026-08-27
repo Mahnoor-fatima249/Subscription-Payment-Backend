@@ -28,6 +28,10 @@ coverage/
 
 # Prisma
 prisma/migrations/
+prisma/seed.js
+prisma/seed.js.map
+prisma/seed.d.ts
+prisma/seed.d.ts.map
 
 # Docker
 .docker/
@@ -35,10 +39,3 @@ prisma/migrations/
 # Misc
 *.tsbuildinfo
 .eslintcache
-
-# Next.js
-.next/
-out/
-
-# Vercel
-.vercel
