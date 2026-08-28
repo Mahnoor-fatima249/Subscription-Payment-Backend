@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, DollarSign, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Search, DollarSign, TrendingUp, AlertTriangle, CreditCard } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 
@@ -11,9 +11,10 @@ interface Payment {
   amount: number;
   currency: string;
   status: string;
-  stripePaymentId: string | null;
+  stripePaymentIntentId: string | null;
   createdAt: string;
-  subscription: { customer: { user: { firstName: string; lastName: string; email: string } }; plan: { name: string } };
+  customer: { user: { firstName: string; lastName: string; email: string } };
+  invoice: { invoiceNumber: string } | null;
 }
 
 export default function PaymentsPage() {
@@ -22,7 +23,16 @@ export default function PaymentsPage() {
 
   const filtered = (payments || []).filter(p => !statusFilter || p.status === statusFilter);
 
-  if (loading) return <div className="text-center py-20 text-slate-400">Loading payments...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center animate-pulse">
+          <DollarSign className="w-5 h-5 text-white" />
+        </div>
+        <p className="text-slate-400 text-sm">Loading payments...</p>
+      </div>
+    </div>
+  );
 
   const stats = {
     total: (payments || []).reduce((sum, p) => sum + Number(p.amount), 0),
@@ -40,19 +50,19 @@ export default function PaymentsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Volume', value: formatCurrency(stats.total), icon: <DollarSign className="w-5 h-5" /> },
-          { label: 'Succeeded', value: formatCurrency(stats.succeeded), icon: <TrendingUp className="w-5 h-5" /> },
-          { label: 'Failed', value: stats.failed.toString(), icon: <AlertTriangle className="w-5 h-5" /> },
-          { label: 'Total Payments', value: stats.count.toString(), icon: <DollarSign className="w-5 h-5" /> },
+          { label: 'Total Volume', value: formatCurrency(stats.total), icon: <DollarSign className="w-5 h-5" />, color: 'text-emerald-400', bg: 'from-emerald-500/10 to-emerald-600/5' },
+          { label: 'Succeeded', value: formatCurrency(stats.succeeded), icon: <TrendingUp className="w-5 h-5" />, color: 'text-sky-400', bg: 'from-sky-500/10 to-sky-600/5' },
+          { label: 'Failed', value: stats.failed.toString(), icon: <AlertTriangle className="w-5 h-5" />, color: 'text-red-400', bg: 'from-red-500/10 to-red-600/5' },
+          { label: 'Total Payments', value: stats.count.toString(), icon: <CreditCard className="w-5 h-5" />, color: 'text-violet-400', bg: 'from-violet-500/10 to-violet-600/5' },
         ].map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
-            className="rounded-xl border border-slate-800/50 bg-slate-900/50 p-4">
+            className={`rounded-2xl border border-slate-800/50 bg-gradient-to-br ${stat.bg} backdrop-blur-xl p-5`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">{stat.label}</p>
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
               </div>
-              <div className="p-3 rounded-xl bg-violet-500/10 text-violet-400">{stat.icon}</div>
+              <div className={`p-3 rounded-xl bg-slate-800/50 ${stat.color}`}>{stat.icon}</div>
             </div>
           </motion.div>
         ))}
@@ -79,7 +89,7 @@ export default function PaymentsPage() {
             <thead>
               <tr className="border-b border-slate-800/50">
                 <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Customer</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Plan</th>
+                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Invoice</th>
                 <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Amount</th>
                 <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Status</th>
                 <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Stripe ID</th>
@@ -91,12 +101,12 @@ export default function PaymentsPage() {
                 <motion.tr key={payment.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }}
                   className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
                   <td className="p-4">
-                    <p className="text-sm font-medium text-white">{payment.subscription.customer.user.firstName} {payment.subscription.customer.user.lastName}</p>
-                    <p className="text-xs text-slate-400">{payment.subscription.customer.user.email}</p>
+                    <p className="text-sm font-medium text-white">{payment.customer.user.firstName} {payment.customer.user.lastName}</p>
+                    <p className="text-xs text-slate-400">{payment.customer.user.email}</p>
                   </td>
                   <td className="p-4">
-                    <span className="inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-400 px-3 py-1 text-xs font-medium">
-                      {payment.subscription.plan.name}
+                    <span className="text-sm text-violet-400 font-mono">
+                      {payment.invoice?.invoiceNumber || '—'}
                     </span>
                   </td>
                   <td className="p-4 text-sm font-medium text-white">{formatCurrency(payment.amount)}</td>
@@ -106,13 +116,20 @@ export default function PaymentsPage() {
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className="text-xs text-slate-500 font-mono">{payment.stripePaymentId ? payment.stripePaymentId.slice(0, 20) + '...' : '—'}</span>
+                    <span className="text-xs text-slate-500 font-mono">
+                      {payment.stripePaymentIntentId ? payment.stripePaymentIntentId.slice(0, 20) + '...' : '—'}
+                    </span>
                   </td>
                   <td className="p-4 text-sm text-slate-400">{formatDate(payment.createdAt)}</td>
                 </motion.tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="p-12 text-center text-slate-500">No payments found</td></tr>
+                <tr><td colSpan={6} className="p-12 text-center text-slate-500">
+                  <div className="flex flex-col items-center gap-3">
+                    <DollarSign className="w-12 h-12 text-slate-600" />
+                    <p>No payments found</p>
+                  </div>
+                </td></tr>
               )}
             </tbody>
           </table>

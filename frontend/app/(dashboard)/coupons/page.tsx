@@ -2,46 +2,92 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Tag, Percent, DollarSign } from 'lucide-react';
+import { Plus, Tag, Percent, DollarSign, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { useApi, useApiPost } from '@/hooks/useApi';
-import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface Coupon {
   id: string;
   code: string;
-  name: string;
   description: string | null;
-  type: string;
-  value: number;
+  couponType: string;
+  discountPercent: number | null;
+  discountAmount: number | null;
+  trialDays: number | null;
   maxRedemptions: number | null;
-  redemptionCount: number;
+  validFrom: string;
   expiresAt: string | null;
-  isActive: boolean;
+  plan: { name: string } | null;
+  _count: { discounts: number };
+}
+
+function StatusBadge({ isActive }: { isActive: boolean }) {
+  return (
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${isActive ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-red-500/20 bg-red-500/10 text-red-400'}`}>
+      {isActive ? 'Active' : 'Inactive'}
+    </span>
+  );
 }
 
 export default function CouponsPage() {
   const { data: coupons, loading, refetch } = useApi<Coupon[]>('/api/coupons');
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
-  const [form, setForm] = React.useState({ code: '', name: '', description: '', type: 'PERCENTAGE', value: 10, maxRedemptions: 100, expiresAt: '' });
+  const [form, setForm] = React.useState({
+    code: '',
+    description: '',
+    couponType: 'PERCENTAGE',
+    discountPercent: 10,
+    discountAmount: 0,
+    maxRedemptions: 100,
+    expiresAt: '',
+  });
   const { post, loading: posting } = useApiPost();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await post('/api/coupons', {
-        ...form,
-        maxRedemptions: form.maxRedemptions ? parseInt(String(form.maxRedemptions)) : null,
+        code: form.code,
+        description: form.description || null,
+        couponType: form.couponType,
+        discountPercent: form.couponType === 'PERCENTAGE' ? form.discountPercent : null,
+        discountAmount: form.couponType === 'FIXED' ? form.discountAmount : null,
+        maxRedemptions: form.maxRedemptions || null,
+        validFrom: new Date().toISOString(),
         expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : null,
       });
       setIsCreateOpen(false);
-      setForm({ code: '', name: '', description: '', type: 'PERCENTAGE', value: 10, maxRedemptions: 100, expiresAt: '' });
+      setForm({ code: '', description: '', couponType: 'PERCENTAGE', discountPercent: 10, discountAmount: 0, maxRedemptions: 100, expiresAt: '' });
       refetch();
     } catch {}
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-400">Loading coupons...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center animate-pulse">
+          <Tag className="w-5 h-5 text-white" />
+        </div>
+        <p className="text-slate-400 text-sm">Loading coupons...</p>
+      </div>
+    </div>
+  );
+
+  const getCouponValue = (coupon: Coupon) => {
+    if (coupon.couponType === 'PERCENTAGE') return `${coupon.discountPercent}%`;
+    if (coupon.couponType === 'FIXED') return formatCurrency(Number(coupon.discountAmount || 0));
+    if (coupon.couponType === 'TRIAL') return `${coupon.trialDays} days`;
+    return '—';
+  };
+
+  const isCouponActive = (coupon: Coupon) => {
+    const now = new Date();
+    const validFrom = new Date(coupon.validFrom);
+    const expiresAt = coupon.expiresAt ? new Date(coupon.expiresAt) : null;
+    return now >= validFrom && (!expiresAt || now <= expiresAt);
+  };
 
   return (
     <div className="space-y-6">
@@ -63,31 +109,28 @@ export default function CouponsPage() {
               <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-600/20 to-emerald-500/10 border border-emerald-500/20">
                 <Tag className="w-5 h-5 text-emerald-400" />
               </div>
-              <Badge isActive={coupon.isActive} />
+              <StatusBadge isActive={isCouponActive(coupon)} />
             </div>
 
             <div className="mb-4">
               <p className="text-xs text-slate-500 font-mono mb-1">{coupon.code}</p>
-              <h3 className="text-xl font-bold text-white">{coupon.name}</h3>
-              {coupon.description && <p className="text-sm text-slate-400 mt-1">{coupon.description}</p>}
+              {coupon.description && <p className="text-sm text-slate-300 mt-1">{coupon.description}</p>}
             </div>
 
             <div className="flex items-baseline gap-1 mb-4">
-              <span className="text-3xl font-bold text-white">
-                {coupon.type === 'PERCENTAGE' ? `${coupon.value}%` : formatCurrency(coupon.value)}
-              </span>
+              <span className="text-3xl font-bold text-white">{getCouponValue(coupon)}</span>
               <span className="text-slate-400 text-sm">discount</span>
             </div>
 
             <div className="space-y-2 mb-6">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-400">Used</span>
-                <span className="text-white">{coupon.redemptionCount} / {coupon.maxRedemptions || '∞'}</span>
+                <span className="text-white">{coupon._count.discounts} / {coupon.maxRedemptions || '∞'}</span>
               </div>
               {coupon.maxRedemptions && (
                 <div className="w-full h-2 rounded-full bg-slate-800">
                   <div className="h-full rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 transition-all"
-                    style={{ width: `${Math.min((coupon.redemptionCount / coupon.maxRedemptions) * 100, 100)}%` }} />
+                    style={{ width: `${Math.min((coupon._count.discounts / coupon.maxRedemptions) * 100, 100)}%` }} />
                 </div>
               )}
             </div>
@@ -96,29 +139,25 @@ export default function CouponsPage() {
               <span className="text-xs text-slate-500">
                 {coupon.expiresAt ? `Expires ${formatDate(coupon.expiresAt)}` : 'No expiry'}
               </span>
-              <span className="text-xs text-slate-500">{coupon.type.replace('_', ' ')}</span>
+              <span className="text-xs text-slate-500">{coupon.couponType.replace('_', ' ')}</span>
             </div>
           </motion.div>
         ))}
 
         {(coupons || []).length === 0 && (
-          <div className="col-span-full text-center py-12 text-slate-500">No coupons yet. Create your first coupon!</div>
+          <div className="col-span-full text-center py-12 text-slate-500">
+            <Tag className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <p>No coupons yet. Create your first coupon!</p>
+          </div>
         )}
       </div>
 
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Create Coupon">
         <form onSubmit={handleCreate} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Code</label>
-              <input type="text" placeholder="SAVE20" value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})}
-                className="w-full h-11 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Name</label>
-              <input type="text" placeholder="20% Off" value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-                className="w-full h-11 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" required />
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">Code</label>
+            <input type="text" placeholder="SAVE20" value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase()})}
+              className="w-full h-11 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" required />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Description</label>
@@ -128,15 +167,24 @@ export default function CouponsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-300">Type</label>
-              <select value={form.type} onChange={e => setForm({...form, type: e.target.value})}
+              <select value={form.couponType} onChange={e => setForm({...form, couponType: e.target.value})}
                 className="w-full h-11 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all">
                 <option value="PERCENTAGE">Percentage</option>
                 <option value="FIXED">Fixed Amount</option>
+                <option value="TRIAL">Free Trial</option>
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Value</label>
-              <input type="number" step="0.01" min="0" placeholder="10" value={form.value || ''} onChange={e => setForm({...form, value: parseFloat(e.target.value) || 0})}
+              <label className="text-sm font-medium text-slate-300">
+                {form.couponType === 'PERCENTAGE' ? 'Percentage Off' : form.couponType === 'FIXED' ? 'Amount Off' : 'Trial Days'}
+              </label>
+              <input type="number" step="0.01" min="0" placeholder={form.couponType === 'TRIAL' ? '14' : '10'}
+                value={form.couponType === 'PERCENTAGE' ? form.discountPercent : form.couponType === 'FIXED' ? form.discountAmount : ''}
+                onChange={e => {
+                  const val = parseFloat(e.target.value) || 0;
+                  if (form.couponType === 'PERCENTAGE') setForm({...form, discountPercent: val});
+                  else setForm({...form, discountAmount: val});
+                }}
                 className="w-full h-11 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" required />
             </div>
           </div>
@@ -159,13 +207,5 @@ export default function CouponsPage() {
         </form>
       </Modal>
     </div>
-  );
-}
-
-function Badge({ isActive }: { isActive: boolean }) {
-  return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${isActive ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-red-500/20 bg-red-500/10 text-red-400'}`}>
-      {isActive ? 'Active' : 'Inactive'}
-    </span>
   );
 }
