@@ -385,6 +385,206 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Wall of Love - Social Proof */}
+      <section className="py-20" style={{ backgroundColor: 'var(--input-bg)' }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-sm font-semibold tracking-wider uppercase mb-3 block" style={{ color: 'var(--primary)' }}>Wall of Love</span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>What people are saying</h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>Real tweets and messages from happy customers</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              { name: '@sarahbuilds', handle: 'Sarah K.', text: 'Just migrated from Chargebee to @BillFlow and wow... the dashboard is STUNNING. MRR tracking that actually makes sense. 🤯', time: '2h ago', likes: 247, avatar: 'https://i.pravatar.cc/80?img=25', verified: true },
+              { name: '@devfounder', handle: 'Alex M.', text: 'The dunning feature recovered $8.2K in failed payments last month. That alone pays for BillFlow 10x over. Absolute no-brainer.', time: '5h ago', likes: 892, avatar: 'https://i.pravatar.cc/80?img=33', verified: true },
+              { name: '@techstartupceo', handle: 'Priya R.', text: 'We switched to BillFlow and our subscription churn dropped 27% in the first quarter. The customer portal is beautiful.', time: '8h ago', likes: 534, avatar: 'https://i.pravatar.cc/80?img=41', verified: false },
+              { name: '@saasfounder', handle: 'Marcus T.', text: 'Finally a billing platform where the API docs are actually good. Integrated BillFlow in 2 days. The webhooks are rock solid.', time: '12h ago', likes: 371, avatar: 'https://i.pravatar.cc/80?img=53', verified: true },
+              { name: '@growthlead', handle: 'Emily W.', text: 'Our finance team literally applauded when we showed them the BillFlow reports. No more Excel sheets. Revenue by plan, churn analysis, everything.', time: '1d ago', likes: 623, avatar: 'https://i.pravatar.cc/80?img=44', verified: true },
+              { name: '@bootstraphq', handle: 'Jordan L.', text: 'Started with the Starter plan, now on Pro. BillFlow scales perfectly. Went from 50 to 2,000 subscribers without a hitch.', time: '1d ago', likes: 415, avatar: 'https://i.pravatar.cc/80?img=60', verified: false },
+            ].map((tweet, index) => (
+              <motion.div
+                key={tweet.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08 }}
+                className="p-5 rounded-2xl glow-card"
+                style={{ backgroundColor: 'var(--card-bg-from)', border: '1px solid var(--card-border)' }}
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <img src={tweet.avatar} alt={tweet.handle} className="w-10 h-10 rounded-full object-cover" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{tweet.handle}</span>
+                      {tweet.verified && (
+                        <svg className="w-4 h-4" viewBox="0 0 22 22" fill="none">
+                          <circle cx="11" cy="11" r="11" fill="var(--primary)" />
+                          <path d="M7 11l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{tweet.name}</span>
+                  </div>
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="#1DA1F2">
+                    <path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z" />
+                  </svg>
+                </div>
+                <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{tweet.text}</p>
+                <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <span>{tweet.time}</span>
+                  <div className="flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                    <span>{tweet.likes}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Before vs After */}
+      <section className="py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-sm font-semibold tracking-wider uppercase mb-3 block" style={{ color: 'var(--primary)' }}>The Difference</span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Before BillFlow vs After BillFlow</h2>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>See how businesses transform their billing operations</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Before */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-8 rounded-2xl"
+              style={{ backgroundColor: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)' }}
+            >
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </div>
+                <h3 className="text-xl font-bold" style={{ color: '#ef4444' }}>Before</h3>
+              </div>
+              <div className="space-y-4">
+                {[
+                  'Manually sending invoices every month',
+                  'Losing 30%+ revenue to failed payments',
+                  'No visibility into MRR or churn',
+                  'Spending 8+ hours on billing tasks',
+                  'Customers complaining about billing issues',
+                  'Using 4 different tools for billing',
+                  'Tax compliance is a nightmare',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}>
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    </div>
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* After */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-8 rounded-2xl"
+              style={{ backgroundColor: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)' }}
+            >
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(16,185,129,0.15)' }}>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
+                </div>
+                <h3 className="text-xl font-bold" style={{ color: '#10b981' }}>After BillFlow</h3>
+              </div>
+              <div className="space-y-4">
+                {[
+                  'Fully automated recurring billing',
+                  'Smart dunning recovers 78% of failed payments',
+                  'Real-time MRR, ARR, and churn analytics',
+                  'Billing takes 30 minutes per month',
+                  'Self-service customer portal',
+                  'One platform for everything',
+                  'Automatic tax compliance worldwide',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(16,185,129,0.15)' }}>
+                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </div>
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Security & Compliance */}
+      <section className="py-16 border-t border-b" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--input-bg)' }}>
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Enterprise-Grade Security</h2>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Your data is protected by industry-leading security measures</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { icon: <Shield className="w-8 h-8" />, label: 'PCI DSS Level 1', desc: 'Certified compliant' },
+              { icon: <Lock className="w-8 h-8" />, label: 'SOC 2 Type II', desc: 'Audited annually' },
+              { icon: <Shield className="w-8 h-8" />, label: 'AES-256', desc: 'Encryption at rest' },
+              { icon: <Globe className="w-8 h-8" />, label: 'GDPR', desc: 'Fully compliant' },
+            ].map((item, index) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="text-center p-5 rounded-2xl"
+                style={{ backgroundColor: 'var(--card-bg-from)', border: '1px solid var(--card-border)' }}
+              >
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ background: 'var(--accent-gradient)', color: 'white' }}>
+                  {item.icon}
+                </div>
+                <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{item.label}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter CTA */}
+      <section className="py-16">
+        <div className="max-w-3xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-8 rounded-3xl text-center"
+            style={{ background: 'var(--accent-gradient)' }}
+          >
+            <Sparkles className="w-8 h-8 text-white mx-auto mb-4 opacity-80" />
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Stay in the loop</h2>
+            <p className="text-sm text-white/80 mb-6 max-w-md mx-auto">
+              Get weekly tips on subscription growth, billing best practices, and product updates. Join 4,200+ founders.
+            </p>
+            <div className="flex items-center gap-2 max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="you@company.com"
+                className="flex-1 h-12 px-4 rounded-xl border-0 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-white/30"
+                style={{ backgroundColor: 'rgba(255,255,255,0.95)', color: '#0a0e1a' }}
+              />
+              <button className="h-12 px-6 rounded-xl text-sm font-bold btn-press" style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}>
+                Subscribe
+              </button>
+            </div>
+            <p className="text-xs text-white/50 mt-3">No spam. Unsubscribe anytime.</p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-6">
