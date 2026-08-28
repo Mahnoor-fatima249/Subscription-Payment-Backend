@@ -13,15 +13,26 @@ interface Payment {
   status: string;
   stripePaymentIntentId: string | null;
   createdAt: string;
-  customer: { user: { firstName: string; lastName: string; email: string } };
+  customer: { company: string; user: { firstName: string; lastName: string; email: string } };
   invoice: { invoiceNumber: string } | null;
 }
 
 export default function PaymentsPage() {
   const { data: payments, loading } = useApi<Payment[]>('/api/payments');
   const [statusFilter, setStatusFilter] = React.useState('');
+  const [search, setSearch] = React.useState('');
 
-  const filtered = (payments || []).filter(p => !statusFilter || p.status === statusFilter);
+  const filtered = (payments || []).filter(p => {
+    if (statusFilter && p.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const fullName = `${p.customer.user.firstName} ${p.customer.user.lastName}`.toLowerCase();
+      const email = p.customer.user.email.toLowerCase();
+      const company = p.customer.company.toLowerCase();
+      if (!fullName.includes(q) && !email.includes(q) && !company.includes(q)) return false;
+    }
+    return true;
+  });
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
@@ -29,7 +40,7 @@ export default function PaymentsPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center animate-pulse">
           <DollarSign className="w-5 h-5 text-white" />
         </div>
-        <p className="text-slate-400 text-sm">Loading payments...</p>
+        <p style={{ color: 'var(--text-muted)' }} className="text-sm">Loading payments...</p>
       </div>
     </div>
   );
@@ -44,8 +55,8 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Payments</h1>
-        <p className="text-slate-400 mt-1">Track all payment transactions</p>
+        <h1 style={{ color: 'var(--text-primary)' }} className="text-2xl font-bold">Payments</h1>
+        <p style={{ color: 'var(--text-muted)' }} className="mt-1">A complete log of every payment — successful, failed, or refunded.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -59,8 +70,8 @@ export default function PaymentsPage() {
             className={`rounded-2xl border border-slate-800/50 bg-gradient-to-br ${stat.bg} backdrop-blur-xl p-5`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400">{stat.label}</p>
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <p style={{ color: 'var(--text-muted)' }} className="text-sm">{stat.label}</p>
+                <p style={{ color: 'var(--text-primary)' }} className="text-2xl font-bold">{stat.value}</p>
               </div>
               <div className={`p-3 rounded-xl bg-slate-800/50 ${stat.color}`}>{stat.icon}</div>
             </div>
@@ -70,11 +81,14 @@ export default function PaymentsPage() {
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input type="text" placeholder="Search payments..." className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" />
+          <Search style={{ color: 'var(--text-muted)' }} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
+          <input type="text" placeholder="Search payments..." value={search} onChange={e => setSearch(e.target.value)}
+            style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)', color: 'var(--text-primary)' }}
+            className="w-full h-10 pl-10 pr-4 rounded-xl border text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" />
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="h-10 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+          style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)', color: 'var(--text-primary)' }}
+          className="h-10 px-4 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
           <option value="">All Status</option>
           <option value="SUCCEEDED">Succeeded</option>
           <option value="FAILED">Failed</option>
@@ -83,48 +97,49 @@ export default function PaymentsPage() {
         </select>
       </div>
 
-      <div className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl overflow-hidden">
+      <div style={{ borderColor: 'var(--card-border)', background: 'linear-gradient(to bottom right, var(--card-bg-from), var(--card-bg-to))' }} className="rounded-2xl border backdrop-blur-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-800/50">
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Customer</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Invoice</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Amount</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Status</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Stripe ID</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Date</th>
+              <tr style={{ borderColor: 'var(--card-border)' }} className="border-b">
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Customer</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Invoice</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Amount</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Status</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Stripe ID</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Date</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((payment, index) => (
                 <motion.tr key={payment.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }}
-                  className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                  style={{ borderColor: 'var(--card-border)' }}
+                  className="border-b hover:bg-slate-800/30 transition-colors">
                   <td className="p-4">
-                    <p className="text-sm font-medium text-white">{payment.customer.user.firstName} {payment.customer.user.lastName}</p>
-                    <p className="text-xs text-slate-400">{payment.customer.user.email}</p>
+                    <p style={{ color: 'var(--text-primary)' }} className="text-sm font-medium">{payment.customer.user.firstName} {payment.customer.user.lastName}</p>
+                    <p style={{ color: 'var(--text-muted)' }} className="text-xs">{payment.customer.user.email}</p>
                   </td>
                   <td className="p-4">
                     <span className="text-sm text-violet-400 font-mono">
                       {payment.invoice?.invoiceNumber || '—'}
                     </span>
                   </td>
-                  <td className="p-4 text-sm font-medium text-white">{formatCurrency(payment.amount)}</td>
+                  <td className="p-4 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{formatCurrency(payment.amount)}</td>
                   <td className="p-4">
                     <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${getStatusColor(payment.status)}`}>
                       {payment.status}
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className="text-xs text-slate-500 font-mono">
+                    <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
                       {payment.stripePaymentIntentId ? payment.stripePaymentIntentId.slice(0, 20) + '...' : '—'}
                     </span>
                   </td>
-                  <td className="p-4 text-sm text-slate-400">{formatDate(payment.createdAt)}</td>
+                  <td className="p-4 text-sm" style={{ color: 'var(--text-muted)' }}>{formatDate(payment.createdAt)}</td>
                 </motion.tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="p-12 text-center text-slate-500">
+                <tr><td colSpan={6} className="p-12 text-center" style={{ color: 'var(--text-muted)' }}>
                   <div className="flex flex-col items-center gap-3">
                     <DollarSign className="w-12 h-12 text-slate-600" />
                     <p>No payments found</p>

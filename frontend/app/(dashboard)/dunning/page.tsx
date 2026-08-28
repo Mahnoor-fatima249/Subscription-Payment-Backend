@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Mail, Clock, CheckCircle, DollarSign } from 'lucide-react';
+import { AlertTriangle, Clock, CheckCircle, DollarSign } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 
@@ -34,7 +34,7 @@ export default function DunningPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center animate-pulse">
           <AlertTriangle className="w-5 h-5 text-white" />
         </div>
-        <p className="text-slate-400 text-sm">Loading dunning records...</p>
+        <p style={{ color: 'var(--text-muted)' }} className="text-sm">Looking up failed payment records...</p>
       </div>
     </div>
   );
@@ -45,8 +45,8 @@ export default function DunningPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Dunning Management</h1>
-        <p className="text-slate-400 mt-1">Failed payment recovery tracking</p>
+        <h1 style={{ color: 'var(--text-primary)' }} className="text-2xl font-bold">Dunning & Recovery</h1>
+        <p style={{ color: 'var(--text-muted)' }} className="mt-1">Keep track of failed payments and follow up before subscriptions lapse.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -57,46 +57,48 @@ export default function DunningPage() {
           { label: 'At Risk Revenue', value: formatCurrency(Number(metrics.totalAmount)), color: 'text-red-400', icon: <DollarSign className="w-5 h-5" />, bg: 'from-red-500/10 to-red-600/5' },
         ].map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
-            className={`rounded-2xl border border-slate-800/50 bg-gradient-to-br ${stat.bg} backdrop-blur-xl p-5`}>
+            style={{ backgroundColor: 'var(--stat-card-bg)', borderColor: 'var(--card-border)' }}
+            className={`rounded-2xl border bg-gradient-to-br ${stat.bg} p-5`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400">{stat.label}</p>
+                <p style={{ color: 'var(--text-muted)' }} className="text-sm">{stat.label}</p>
                 <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
               </div>
-              <div className={`p-3 rounded-xl bg-slate-800/50 ${stat.color}`}>{stat.icon}</div>
+              <div className={`p-3 rounded-xl bg-black/5 dark:bg-white/5 ${stat.color}`}>{stat.icon}</div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl overflow-hidden">
-        <div className="p-4 border-b border-slate-800/50">
-          <h3 className="text-lg font-semibold text-white">Failed Payments</h3>
+      <div style={{ backgroundColor: 'var(--card-bg-from)', borderColor: 'var(--card-border)' }} className="rounded-2xl border overflow-hidden">
+        <div style={{ borderBottomColor: 'var(--card-border)' }} className="p-4 border-b">
+          <h3 style={{ color: 'var(--text-primary)' }} className="text-lg font-semibold">Failed Payments</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-800/50">
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Customer</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Invoice</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Amount Due</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Attempts</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Status</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Next Retry</th>
+              <tr style={{ borderBottomColor: 'var(--card-border)' }} className="border-b">
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Customer</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Invoice</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Amount Due</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Attempts</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Status</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Next Retry</th>
               </tr>
             </thead>
             <tbody>
               {failedPayments.map((record, index) => (
                 <motion.tr key={record.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }}
-                  className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                  style={{ borderBottomColor: 'var(--card-border)' }}
+                  className="border-b hover:opacity-80 transition-colors">
                   <td className="p-4">
-                    <p className="text-sm font-medium text-white">{record.customer.user.firstName} {record.customer.user.lastName}</p>
-                    <p className="text-xs text-slate-400">{record.customer.user.email}</p>
+                    <p style={{ color: 'var(--text-primary)' }} className="text-sm font-medium">{record.customer.user.firstName} {record.customer.user.lastName}</p>
+                    <p style={{ color: 'var(--text-muted)' }} className="text-xs">{record.customer.user.email}</p>
                   </td>
                   <td className="p-4">
                     <span className="text-sm text-violet-400 font-mono">{record.invoiceNumber}</span>
                   </td>
-                  <td className="p-4 text-sm font-medium text-white">{formatCurrency(Number(record.amountDue))}</td>
+                  <td style={{ color: 'var(--text-primary)' }} className="p-4 text-sm font-medium">{formatCurrency(Number(record.amountDue))}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-1">
@@ -104,7 +106,7 @@ export default function DunningPage() {
                           <div key={i} className="w-2 h-2 rounded-full bg-amber-500" />
                         ))}
                       </div>
-                      <span className="text-sm text-slate-400">{record.attemptCount}</span>
+                      <span style={{ color: 'var(--text-muted)' }} className="text-sm">{record.attemptCount}</span>
                     </div>
                   </td>
                   <td className="p-4">
@@ -112,16 +114,16 @@ export default function DunningPage() {
                       {record.status}
                     </span>
                   </td>
-                  <td className="p-4 text-sm text-slate-400">
+                  <td style={{ color: 'var(--text-muted)' }} className="p-4 text-sm">
                     {record.nextPaymentAttempt ? formatDate(record.nextPaymentAttempt) : '—'}
                   </td>
                 </motion.tr>
               ))}
               {failedPayments.length === 0 && (
-                <tr><td colSpan={6} className="p-12 text-center text-slate-500">
+                <tr><td colSpan={6} className="p-12 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <CheckCircle className="w-12 h-12 text-emerald-500/50" />
-                    <p>No dunning cases - all payments are healthy!</p>
+                    <p style={{ color: 'var(--text-muted)' }}>No dunning cases - all payments are healthy!</p>
                   </div>
                 </td></tr>
               )}

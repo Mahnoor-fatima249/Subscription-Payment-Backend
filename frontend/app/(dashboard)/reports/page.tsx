@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, RefreshCw, CreditCard } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, DollarSign, CreditCard, RefreshCw } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 import { formatCurrency } from '@/lib/utils';
 
@@ -22,7 +22,7 @@ export default function ReportsPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center animate-pulse">
           <BarChart3 className="w-5 h-5 text-white" />
         </div>
-        <p className="text-slate-400 text-sm">Loading reports...</p>
+        <p style={{ color: 'var(--text-muted)' }} className="text-sm">Loading reports...</p>
       </div>
     </div>
   );
@@ -38,10 +38,11 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Reports & Analytics</h1>
-          <p className="text-slate-400 mt-1">Business intelligence dashboard</p>
+          <h1 style={{ color: 'var(--text-primary)' }} className="text-2xl font-bold">Reports & Analytics</h1>
+          <p style={{ color: 'var(--text-muted)' }} className="mt-1">A bird's eye view of how your business is growing.</p>
         </div>
-        <button onClick={() => refetch()} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-700/50 text-sm text-slate-300 hover:bg-slate-800/50 transition-colors">
+        <button onClick={() => refetch()} style={{ borderColor: 'var(--input-border)', color: 'var(--text-secondary)' }}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm hover:opacity-80 transition-colors">
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>
       </div>
@@ -54,13 +55,14 @@ export default function ReportsPage() {
           { label: 'Total Customers', value: customers.total.toString(), icon: <Users className="w-5 h-5" />, color: 'text-amber-400', bg: 'from-amber-500/10 to-amber-600/5' },
         ].map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
-            className={`rounded-2xl border border-slate-800/50 bg-gradient-to-br ${stat.bg} backdrop-blur-xl p-5`}>
+            style={{ backgroundColor: 'var(--stat-card-bg)', borderColor: 'var(--card-border)' }}
+            className={`rounded-2xl border bg-gradient-to-br ${stat.bg} p-5`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-400">{stat.label}</p>
-                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <p style={{ color: 'var(--text-muted)' }} className="text-sm">{stat.label}</p>
+                <p style={{ color: 'var(--text-primary)' }} className="text-2xl font-bold">{stat.value}</p>
               </div>
-              <div className={`p-3 rounded-xl bg-slate-800/50 ${stat.color}`}>{stat.icon}</div>
+              <div className={`p-3 rounded-xl bg-black/5 dark:bg-white/5 ${stat.color}`}>{stat.icon}</div>
             </div>
           </motion.div>
         ))}
@@ -68,31 +70,33 @@ export default function ReportsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Subscription Status Distribution</h3>
+          style={{ backgroundColor: 'var(--card-bg-from)', borderColor: 'var(--card-border)' }}
+          className="rounded-2xl border p-6">
+          <h3 style={{ color: 'var(--text-primary)' }} className="text-lg font-semibold mb-4">Subscription Status Distribution</h3>
           <div className="space-y-4">
             {subsByStatus.length > 0 ? subsByStatus.map((item, index) => {
               const percentage = totalSubs > 0 ? (item.count / totalSubs) * 100 : 0;
               return (
                 <div key={index} className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">{item.status}</span>
-                    <span className="text-white">{item.count} ({percentage.toFixed(1)}%)</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{item.status}</span>
+                    <span style={{ color: 'var(--text-primary)' }}>{item.count} ({percentage.toFixed(1)}%)</span>
                   </div>
-                  <div className="w-full h-3 rounded-full bg-slate-800">
+                  <div style={{ backgroundColor: 'var(--input-bg)' }} className="w-full h-3 rounded-full">
                     <div className="h-full rounded-full transition-all" style={{ width: `${percentage}%`, backgroundColor: COLORS[index % COLORS.length] }} />
                   </div>
                 </div>
               );
             }) : (
-              <div className="text-center text-slate-500 py-8">No subscription data yet</div>
+              <div style={{ color: 'var(--text-muted)' }} className="text-center py-8">No subscription data yet</div>
             )}
           </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-          className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Revenue by Plan</h3>
+          style={{ backgroundColor: 'var(--card-bg-from)', borderColor: 'var(--card-border)' }}
+          className="rounded-2xl border p-6">
+          <h3 style={{ color: 'var(--text-primary)' }} className="text-lg font-semibold mb-4">Revenue by Plan</h3>
           <div className="space-y-4">
             {planData.length > 0 ? planData.map((plan, index) => {
               const maxSubs = Math.max(...planData.map(p => p.subscribers), 1);
@@ -100,16 +104,16 @@ export default function ReportsPage() {
               return (
                 <div key={index} className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">{plan.plan}</span>
-                    <span className="text-white">{plan.subscribers} subscribers</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{plan.plan}</span>
+                    <span style={{ color: 'var(--text-primary)' }}>{plan.subscribers} subscribers</span>
                   </div>
-                  <div className="w-full h-3 rounded-full bg-slate-800">
+                  <div style={{ backgroundColor: 'var(--input-bg)' }} className="w-full h-3 rounded-full">
                     <div className="h-full rounded-full transition-all" style={{ width: `${percentage}%`, backgroundColor: COLORS[index % COLORS.length] }} />
                   </div>
                 </div>
               );
             }) : (
-              <div className="text-center text-slate-500 py-8">No plan data yet</div>
+              <div style={{ color: 'var(--text-muted)' }} className="text-center py-8">No plan data yet</div>
             )}
           </div>
         </motion.div>
@@ -117,56 +121,43 @@ export default function ReportsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Key Metrics</h3>
+          style={{ backgroundColor: 'var(--card-bg-from)', borderColor: 'var(--card-border)' }}
+          className="rounded-2xl border p-6">
+          <h3 style={{ color: 'var(--text-primary)' }} className="text-lg font-semibold mb-4">Key Metrics</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400"><DollarSign className="w-4 h-4" /></div>
-                <span className="text-sm text-slate-300">Average Revenue Per User</span>
+            {[
+              { label: 'Average Revenue Per User', value: formatCurrency(revenue.arpu), icon: <DollarSign className="w-4 h-4" />, color: 'text-emerald-400' },
+              { label: 'Total Subscriptions', value: totalSubs.toString(), icon: <CreditCard className="w-4 h-4" />, color: 'text-sky-400' },
+              { label: 'Active Plans', value: planData.length.toString(), icon: <BarChart3 className="w-4 h-4" />, color: 'text-violet-400' },
+              { label: 'Customer Base', value: customers.total.toString(), icon: <Users className="w-4 h-4" />, color: 'text-amber-400' },
+            ].map((item) => (
+              <div key={item.label} style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--card-border)' }}
+                className="flex items-center justify-between p-4 rounded-xl border">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg bg-black/5 dark:bg-white/5 ${item.color}`}>{item.icon}</div>
+                  <span style={{ color: 'var(--text-secondary)' }} className="text-sm">{item.label}</span>
+                </div>
+                <span style={{ color: 'var(--text-primary)' }} className="text-sm font-semibold">{item.value}</span>
               </div>
-              <span className="text-sm font-semibold text-white">{formatCurrency(revenue.arpu)}</span>
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400"><CreditCard className="w-4 h-4" /></div>
-                <span className="text-sm text-slate-300">Total Subscriptions</span>
-              </div>
-              <span className="text-sm font-semibold text-white">{totalSubs}</span>
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400"><BarChart3 className="w-4 h-4" /></div>
-                <span className="text-sm text-slate-300">Active Plans</span>
-              </div>
-              <span className="text-sm font-semibold text-white">{planData.length}</span>
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/30">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400"><Users className="w-4 h-4" /></div>
-                <span className="text-sm text-slate-300">Customer Base</span>
-              </div>
-              <span className="text-sm font-semibold text-white">{customers.total}</span>
-            </div>
+            ))}
           </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-          className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Revenue Overview</h3>
+          style={{ backgroundColor: 'var(--card-bg-from)', borderColor: 'var(--card-border)' }}
+          className="rounded-2xl border p-6">
+          <h3 style={{ color: 'var(--text-primary)' }} className="text-lg font-semibold mb-4">Revenue Overview</h3>
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-gradient-to-r from-violet-600/10 to-indigo-600/10 border border-violet-500/20">
-              <p className="text-sm text-slate-400 mb-1">Monthly Recurring Revenue</p>
-              <p className="text-3xl font-bold text-white">{formatCurrency(revenue.mrr)}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-600/10 to-teal-600/10 border border-emerald-500/20">
-              <p className="text-sm text-slate-400 mb-1">Annual Recurring Revenue</p>
-              <p className="text-3xl font-bold text-white">{formatCurrency(revenue.arr)}</p>
-            </div>
-            <div className="p-4 rounded-xl bg-gradient-to-r from-sky-600/10 to-blue-600/10 border border-sky-500/20">
-              <p className="text-sm text-slate-400 mb-1">Total Revenue (30d)</p>
-              <p className="text-3xl font-bold text-white">{formatCurrency(revenue.totalRevenue)}</p>
-            </div>
+            {[
+              { label: 'Monthly Recurring Revenue', value: formatCurrency(revenue.mrr), gradient: 'from-violet-600/10 to-indigo-600/10', border: 'border-violet-500/20' },
+              { label: 'Annual Recurring Revenue', value: formatCurrency(revenue.arr), gradient: 'from-emerald-600/10 to-teal-600/10', border: 'border-emerald-500/20' },
+              { label: 'Total Revenue (30d)', value: formatCurrency(revenue.totalRevenue), gradient: 'from-sky-600/10 to-blue-600/10', border: 'border-sky-500/20' },
+            ].map((item) => (
+              <div key={item.label} className={`p-4 rounded-xl bg-gradient-to-r ${item.gradient} border ${item.border}`}>
+                <p style={{ color: 'var(--text-muted)' }} className="text-sm mb-1">{item.label}</p>
+                <p style={{ color: 'var(--text-primary)' }} className="text-3xl font-bold">{item.value}</p>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>

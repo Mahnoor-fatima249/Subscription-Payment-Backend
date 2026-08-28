@@ -30,14 +30,14 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div style={{ background: 'var(--background)' }} className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center animate-pulse">
-            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-14 h-14 rounded-3xl flex items-center justify-center pulse-glow" style={{ background: 'var(--accent-gradient)' }}>
+            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <p className="text-slate-400">Loading...</p>
+          <p style={{ color: 'var(--text-muted)' }} className="text-sm font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -48,11 +48,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div style={{ background: 'var(--background)' }} className="min-h-screen">
       <Sidebar />
       <div className="ml-[280px]">
         <Header />
-        <main className="p-6">
+        <main className="p-6 page-enter">
           {children}
         </main>
       </div>

@@ -22,45 +22,60 @@ export function Sidebar() {
   const pathname = usePathname();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    window.location.href = '/logout';
   };
 
   return (
-    <aside className="w-64 h-screen border-r border-slate-800/50 bg-slate-900/80 backdrop-blur-xl flex flex-col fixed left-0 top-0">
-      <div className="p-6 border-b border-slate-800/50">
+    <aside
+      style={{ background: 'var(--sidebar-bg)', borderRightColor: 'var(--sidebar-border)' }}
+      className="w-64 h-screen border-r flex flex-col fixed left-0 top-0 glass"
+    >
+      {/* Logo */}
+      <div style={{ borderBottomColor: 'var(--sidebar-border)' }} className="p-5 border-b">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-2xl flex items-center justify-center pulse-glow"
+            style={{ background: 'var(--accent-gradient)' }}
+          >
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">BillFlow</h1>
-            <p className="text-xs text-slate-500">Subscription Billing</p>
+            <h1 className="text-lg font-bold gradient-text tracking-tight">BillFlow</h1>
+            <p style={{ color: 'var(--text-muted)' }} className="text-[10px] font-medium uppercase tracking-widest">Billing Platform</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
+      {/* Navigation */}
+      <nav className="flex-1 p-3 space-y-0.5 mt-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link key={item.href} href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-gradient-to-r from-violet-600/20 to-indigo-600/20 text-white border border-violet-500/20'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}>
-              <item.icon className={`w-5 h-5 ${isActive ? 'text-violet-400' : ''}`} />
+            <Link
+              key={item.href}
+              href={item.href}
+              className="nav-slide flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200"
+              style={{
+                background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                color: isActive ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                boxShadow: isActive ? '0 4px 20px rgba(79, 70, 229, 0.35)' : 'none',
+              }}
+            >
+              <item.icon className="w-[18px] h-[18px]" />
               {item.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-800/50">
-        <button onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all w-full">
-          <LogOut className="w-5 h-5" />
+      {/* Logout */}
+      <div style={{ borderTopColor: 'var(--sidebar-border)' }} className="p-3 border-t">
+        <button
+          onClick={handleLogout}
+          className="nav-slide flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 w-full hover:bg-red-500/10 hover:text-red-400"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          <LogOut className="w-[18px] h-[18px]" />
           Logout
         </button>
       </div>

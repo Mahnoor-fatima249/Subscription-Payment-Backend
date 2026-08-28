@@ -14,19 +14,30 @@ interface Subscription {
   currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
   createdAt: string;
-  customer: { user: { firstName: string; lastName: string; email: string } };
+  customer: { company: string; user: { firstName: string; lastName: string; email: string } };
   plan: { name: string; basePrice: number };
 }
 
 export default function SubscriptionsPage() {
   const { data: subscriptions, loading, refetch } = useApi<Subscription[]>('/api/subscriptions');
   const [statusFilter, setStatusFilter] = React.useState('');
+  const [search, setSearch] = React.useState('');
   const { post } = useApiPost();
 
-  const filtered = (subscriptions || []).filter(s => !statusFilter || s.status === statusFilter);
+  const filtered = (subscriptions || []).filter(s => {
+    if (statusFilter && s.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const name = `${s.customer.user.firstName} ${s.customer.user.lastName}`.toLowerCase();
+      const email = s.customer.user.email.toLowerCase();
+      const company = s.customer.company.toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !company.includes(q)) return false;
+    }
+    return true;
+  });
 
   const handleCancel = async (id: string) => {
-    if (!confirm('Cancel this subscription?')) return;
+    if (!confirm('Are you sure you want to cancel this subscription? This can\'t be undone.')) return;
     try {
       await post(`/api/subscriptions/${id}`, { action: 'cancel' });
       refetch();
@@ -47,7 +58,7 @@ export default function SubscriptionsPage() {
     } catch {}
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-400">Loading subscriptions...</div>;
+  if (loading) return <div style={{ color: 'var(--text-muted)' }} className="text-center py-20">Fetching your subscriptions...</div>;
 
   const stats = {
     active: (subscriptions || []).filter(s => s.status === 'ACTIVE').length,
@@ -60,8 +71,8 @@ export default function SubscriptionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Subscriptions</h1>
-          <p className="text-slate-400 mt-1">Manage all subscriptions</p>
+          <h1 style={{ color: 'var(--text-primary)' }} className="text-2xl font-bold">Subscriptions</h1>
+          <p style={{ color: 'var(--text-muted)' }} className="mt-1">A quick look at every subscription — who's on what plan and where things stand.</p>
         </div>
       </div>
 
@@ -73,8 +84,9 @@ export default function SubscriptionsPage() {
           { label: 'Cancelled', value: stats.cancelled, color: 'text-red-400' },
         ].map((stat, index) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
-            className="rounded-xl border border-slate-800/50 bg-slate-900/50 p-4">
-            <p className="text-sm text-slate-400">{stat.label}</p>
+            style={{ borderColor: 'var(--card-border)', backgroundColor: 'var(--stat-card-bg)' }}
+            className="rounded-xl border p-4">
+            <p style={{ color: 'var(--text-muted)' }} className="text-sm">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
           </motion.div>
         ))}
@@ -82,11 +94,15 @@ export default function SubscriptionsPage() {
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input type="text" placeholder="Search..." className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" />
+          <Search style={{ color: 'var(--text-muted)' }} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" />
+          <input type="text" placeholder="Search by name, email, or company..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)', color: 'var(--text-primary)' }}
+            className="w-full h-10 pl-10 pr-4 rounded-xl border text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all" />
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          className="h-10 px-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+          style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)', color: 'var(--text-primary)' }}
+          className="h-10 px-4 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
           <option value="">All Status</option>
           <option value="ACTIVE">Active</option>
           <option value="TRIALING">Trial</option>
@@ -96,26 +112,28 @@ export default function SubscriptionsPage() {
         </select>
       </div>
 
-      <div className="rounded-2xl border border-slate-800/50 bg-gradient-to-br from-slate-900/80 to-slate-800/50 backdrop-blur-xl overflow-hidden">
+      <div style={{ borderColor: 'var(--card-border)', background: 'linear-gradient(to bottom right, var(--card-bg-from), var(--card-bg-to))' }} className="rounded-2xl border backdrop-blur-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-800/50">
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Customer</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Plan</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Status</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Amount</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Next Billing</th>
-                <th className="h-12 px-4 text-left text-sm font-medium text-slate-400">Actions</th>
+              <tr style={{ borderColor: 'var(--card-border)' }} className="border-b">
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Customer</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Plan</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Status</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Amount</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Next Billing</th>
+                <th style={{ color: 'var(--text-muted)' }} className="h-12 px-4 text-left text-sm font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((sub, index) => (
                 <motion.tr key={sub.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.05 }}
-                  className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                  style={{ borderColor: 'var(--card-border)' }}
+                  className="border-b hover:bg-slate-800/30 transition-colors">
                   <td className="p-4">
-                    <p className="text-sm font-medium text-white">{sub.customer.user.firstName} {sub.customer.user.lastName}</p>
-                    <p className="text-xs text-slate-400">{sub.customer.user.email}</p>
+                    <p style={{ color: 'var(--text-primary)' }} className="text-sm font-medium">{sub.customer.user.firstName} {sub.customer.user.lastName}</p>
+                    <p style={{ color: 'var(--text-muted)' }} className="text-xs">{sub.customer.company}</p>
+                    <p style={{ color: 'var(--text-muted)' }} className="text-xs">{sub.customer.user.email}</p>
                   </td>
                   <td className="p-4">
                     <span className="inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 text-violet-400 px-3 py-1 text-xs font-medium">
@@ -127,8 +145,8 @@ export default function SubscriptionsPage() {
                       {sub.status}
                     </span>
                   </td>
-                  <td className="p-4 text-sm font-medium text-white">{formatCurrency(sub.plan.basePrice * sub.quantity)}/mo</td>
-                  <td className="p-4 text-sm text-slate-400">{sub.currentPeriodEnd ? formatDate(sub.currentPeriodEnd) : '—'}</td>
+                  <td className="p-4 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{formatCurrency(sub.plan.basePrice * sub.quantity)}/mo</td>
+                  <td className="p-4 text-sm" style={{ color: 'var(--text-muted)' }}>{sub.currentPeriodEnd ? formatDate(sub.currentPeriodEnd) : '—'}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       {sub.status === 'ACTIVE' && (
@@ -151,7 +169,7 @@ export default function SubscriptionsPage() {
                 </motion.tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="p-12 text-center text-slate-500">No subscriptions found</td></tr>
+                <tr><td colSpan={6} className="p-12 text-center" style={{ color: 'var(--text-muted)' }}>No subscriptions found</td></tr>
               )}
             </tbody>
           </table>
