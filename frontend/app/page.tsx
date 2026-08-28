@@ -173,21 +173,20 @@ export default function HomePage() {
           <p className="text-center text-sm font-semibold tracking-wider uppercase mb-8" style={{ color: 'var(--text-muted)' }}>
             Trusted by 10,000+ businesses worldwide
           </p>
-          <div className="flex items-center justify-center flex-wrap gap-12 opacity-50">
+          <div className="flex items-center justify-center flex-wrap gap-8 md:gap-14">
             {[
-              { name: 'Microsoft', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Microsoft_logo_%282012%29.svg/200px-Microsoft_logo_%282012%29.svg.png' },
-              { name: 'Amazon', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png' },
-              { name: 'Google', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/200px-Google_2015_logo.svg.png' },
-              { name: 'Stripe', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Stripe_Logo%2C_revised_2016.svg/200px-Stripe_Logo%2C_revised_2016.svg.png' },
-              { name: 'Shopify', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Shopify_logo_2018.svg/200px-Shopify_logo_2018.svg.png' },
-              { name: 'Slack', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Slack_icon_2019.svg/200px-Slack_icon_2019.svg.png' },
+              { name: 'Microsoft', logo: '/logos/microsoft.svg' },
+              { name: 'Amazon', logo: '/logos/amazon.svg' },
+              { name: 'Google', logo: '/logos/google.svg' },
+              { name: 'Stripe', logo: '/logos/stripe.svg' },
+              { name: 'Shopify', logo: '/logos/shopify.svg' },
+              { name: 'Slack', logo: '/logos/slack.svg' },
             ].map((company) => (
               <img
                 key={company.name}
-                src={company.url}
+                src={company.logo}
                 alt={company.name}
-                className="h-8 object-contain"
-                style={{ filter: 'grayscale(1) brightness(0.5)' }}
+                className="h-7 md:h-8 object-contain opacity-40 hover:opacity-60 transition-opacity"
               />
             ))}
           </div>
