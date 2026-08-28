@@ -60,6 +60,4 @@ npm run dev
 3. Add environment variables
 4. Deploy
 
-## License
 
-MIT
